@@ -1,0 +1,8 @@
+{
+  "school_year": "2026-2027",
+  "first_day": "2026-04-01",
+  "last_day": "2027-03-31",
+  "weekdays": [0, 1, 2, 3, 4],
+  "excluded_dates": ["2026-12-25"],
+  "source_url": ""
+}

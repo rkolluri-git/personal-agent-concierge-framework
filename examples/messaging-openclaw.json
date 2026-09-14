@@ -1,0 +1,9 @@
+{
+  "provider": "openclaw",
+  "bridge_token": "REPLACE_WITH_RANDOM_TOKEN_AT_LEAST_32_CHARACTERS",
+  "sender_number": "+15555550100",
+  "opted_in_recipients": [
+    "+15555550101"
+  ],
+  "openclaw_account": "family"
+}

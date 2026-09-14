@@ -1,0 +1,11 @@
+{
+  "provider": "twilio-sms",
+  "bridge_token": "REPLACE_WITH_RANDOM_TOKEN_AT_LEAST_32_CHARACTERS",
+  "sender_number": "+15555550100",
+  "opted_in_recipients": [
+    "+15555550101"
+  ],
+  "account_sid": "REPLACE_WITH_TWILIO_ACCOUNT_SID",
+  "auth_token": "REPLACE_WITH_TWILIO_AUTH_TOKEN",
+  "webhook_url": "https://your-webhook-host.example/webhooks/twilio"
+}

@@ -1,0 +1,14 @@
+{
+  "classification": "A calendar event is attendance at an appointment, meeting, class, practice or activity. A task is an action to complete, such as submitting homework, buying milk or taking out bins. A deadline or reminder time alone does not make a task a calendar event. Ask if ambiguous. Never invent missing facts.",
+  "calendar_required": ["title", "primary_member", "date", "time"],
+  "questions": {
+    "title": "What is the appointment or activity?",
+    "family member": "Who is this for?",
+    "date": "What date is it?",
+    "time": "What time does it start? Include AM or PM.",
+    "whether this should be a task or calendar event": "Is this a task to complete or a calendar activity to attend?",
+    "which parent will drive": "Which parent will drive, or is transportation not needed?",
+    "who will pick up": "Who will pick up? You can also say Undecided."
+  },
+  "instructions": "Keep previous confirmed fields when interpreting a follow-up. Ask for one missing required field at a time. Preserve any end time and notifications provided. Location and end time are optional in this version; do not invent them. Completion means draft ready for review, never booked, sent or executed."
+}

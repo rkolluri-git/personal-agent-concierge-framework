@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personal Agent / Concierge Framework · Concierge</title>
+<meta name="description" content="Your family's shared tasks and progress.">
+<link rel="stylesheet" href="/static/dashboard.css?v=concierge-combine-events">
+<script src="/static/dashboard.js?v=secure-calendar" defer></script>
+<script src="/static/concierge-workspace.js?v=secure-calendar" defer></script>
+<link rel="stylesheet" href="/static/concierge-workspace.css?v=secure-calendar">
+</head>
+<body>
+<header><a class="brand" href="/dashboard"><span class="mark" aria-hidden="true">F</span> Personal Agent / Concierge Framework</a><span class="header-note">A little more together.</span><button id="sign-out" type="button">Sign out</button></header>
+<main>
+<p id="regional-summary" class="optional" aria-label="Regional settings"></p>
+<div class="heading"><div><p class="eyebrow">FAMILY CONCIERGE</p><h1>What’s on our list?</h1></div><button id="refresh" class="secondary" type="button">Refresh</button></div>
+<p id="notice" role="status" aria-live="polite">Loading your family’s tasks…</p>
+<nav class="view-nav" aria-label="Family dashboard"><button id="show-tasks" aria-pressed="true" type="button">Tasks</button><button id="show-calendar" aria-pressed="false" type="button">Calendar</button><button id="show-departures" aria-pressed="false" type="button">Departures</button><button id="show-weather" aria-pressed="false" type="button">Weather</button><button id="show-concierge" aria-pressed="false" type="button">Concierge</button><button id="show-alerts" aria-pressed="false" type="button">Alerts</button><button id="show-events" aria-pressed="false" type="button">Events</button></nav>
+<div class="layout" id="tasks-view">
+<section class="board" aria-labelledby="tasks-heading">
+<div class="board-top"><h2 id="tasks-heading">Our tasks</h2><span id="count"></span></div>
+<div class="filters"><label>Family member<select id="filter-member"><option value="">Everyone</option></select></label><label>Progress<select id="filter-status"><option value="">All tasks</option><option value="pending">To do</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select></label></div>
+<div id="tasks" aria-live="polite"></div>
+</section>
+<aside>
+<section class="panel"><p class="eyebrow">MAKE A PLAN</p><h2>Add a task</h2>
+<form id="task-form">
+<label>What needs doing?<input id="title" name="title" required maxlength="200" placeholder="e.g. Water the plants"></label>
+<label>Who’s taking it?<select id="assignee" name="assigned_to"><option value="">Unassigned</option></select></label>
+<label>Details <span class="optional">(optional)</span><textarea id="description" name="description" maxlength="10000" rows="3" placeholder="Anything they should know"></textarea></label>
+<label>Due date and time <span class="optional">(optional)</span><input id="task-due-at" type="datetime-local"></label>
+<label>Repeat<select id="task-repeat"><option value="none">Does not repeat</option><option value="weekly">Every week at this time</option></select></label>
+<label>Message reminder<select id="task-reminder"><option value="">No reminder</option><option value="0">At the due time</option><option value="15">15 minutes before</option><option value="30">30 minutes before</option><option value="60">1 hour before</option><option value="1440">1 day before</option></select></label>
+<p class="optional task-reminder-help">Reminders go to the assigned person using their saved messaging contact.</p>
+<button type="submit">Add task</button>
+</form></section>
+<section class="panel family"><h2>The family</h2><p class="optional">Ages and messaging contacts are encrypted before they are stored.</p><form id="family-profiles-form"><div id="members"></div><button type="submit" class="secondary">Save family profiles</button></form><form id="member-form" class="new-member-form"><h3>Add a family member</h3><label>Name<input id="member-name" required maxlength="100" placeholder="Name" autocomplete="off"></label><label>Family role<select id="member-role"><option value="adult">Adult</option><option value="parent">Parent</option><option value="child">Child</option></select></label><label>Age <span class="optional">(optional)</span><input id="member-age" type="number" min="0" max="120" placeholder="Age"></label><label>Messaging phone or Apple Account email <span class="optional">(optional)</span><input id="member-contact" minlength="3" maxlength="254" placeholder="Phone number or email" autocomplete="off"></label><button type="submit" class="secondary">Add family member</button></form></section>
+</aside>
+</div>
+<section id="events-view" class="board" hidden aria-labelledby="events-heading">
+<div class="board-top"><div><p class="eyebrow">MAKE TIME FOR MUSIC</p><h2 id="events-heading">Concerts</h2></div><button id="refresh-events" type="button">Refresh events</button></div>
+<p>Explore concerts through the end of the year at your configured venues. Listings may change; check the venue before making plans.</p>
+<div class="filters"><label>Artist or genre<input id="events-query" type="search" placeholder="Search listings"></label><label>Month<select id="events-month"><option value="">All months</option></select></label><label>Show<select id="events-saved"><option value="">All concerts</option><option value="saved">My shortlist</option></select></label></div>
+<details class="panel"><summary>Concert preferences</summary>
+<form id="event-preferences-form">
+<label>Favorite artists (comma-separated)<input id="event-artists" maxlength="3000" placeholder="e.g. Switchfoot, Jack White"></label>
+<label>Favorite genres (comma-separated)<input id="event-genres" maxlength="1000" placeholder="e.g. Rock, Pop, Country"></label>
+<label>Maximum price per ticket (configured currency)<input id="event-budget" type="number" min="0" max="10000" step="0.01" placeholder="No limit"></label>
+<label class="choice"><input id="event-unknown-price" type="checkbox" checked> Include listings without a published price</label>
+<label class="choice"><input id="event-all-ages" type="checkbox"> Only listings explicitly marked all ages</label>
+<label class="choice"><input id="event-prefs-enabled" type="checkbox"> Use these preferences for Concierge concert searches</label>
+<p class="optional">Favorite artists or genres match. An explicit artist or genre in your request overrides those favorites. Budget and age filters still apply. Published prices may exclude fees; all-ages admission does not guarantee suitable content.</p>
+<button type="submit">Save preferences</button><p id="event-prefs-message" role="status"></p>
+</form></details>
+<label class="choice"><input id="event-match-prefs" type="checkbox"> Show only matches for my enabled preferences</label>
+<p id="events-message" role="status" aria-live="polite"></p><div id="events-sources"></div><div id="concert-list"></div>
+</section>
+<section id="calendar-view" class="board calendar-board" hidden aria-labelledby="calendar-heading">
+<div class="board-top"><div><p class="eyebrow">THE NEXT 14 DAYS</p><h2 id="calendar-heading">Our calendar</h2></div><button id="refresh-calendar" class="secondary" type="button">Refresh calendar</button></div>
+<p id="calendar-zone" class="optional"></p>
+<div id="calendar-sources" class="calendar-sources"></div>
+<p id="calendar-message" role="status" aria-live="polite"></p>
+<section class="calendar-assignments" aria-labelledby="calendar-assignments-heading">
+<div><p class="eyebrow">FAMILY CALENDARS</p><h3 id="calendar-assignments-heading">Who should receive each schedule?</h3></div>
+<p class="optional">Choose everyone whose daily briefing should include events from each calendar. A shared family calendar can belong to more than one person.</p>
+<form id="calendar-assignments-form"><div id="calendar-assignment-list"></div><button type="submit" class="secondary">Save calendar assignments</button><p id="calendar-assignment-status" class="form-message" role="status" aria-live="polite"></p></form>
+</section>
+<section id="calendar-conflicts" class="conflicts" hidden aria-labelledby="conflicts-heading"></section>
+<details class="panel" id="icloud-editor"><summary>Add or update an iCloud event</summary>
+<p>Save writes to the selected iCloud calendar. Input times use your device’s timezone. Past dates are welcome. Add a one-time event or a repeating series; edit existing series or invitations in Apple Calendar.</p>
+<form id="icloud-event-form">
+<label>iCloud calendar<select id="icloud-target" required><option value="">Choose a calendar</option></select></label>
+<label>Title<input id="icloud-title" required maxlength="200"></label>
+<label>Starts<input id="icloud-start" type="datetime-local" required></label><label>Ends<input id="icloud-end" type="datetime-local" required></label>
+<label>Repeat<select id="icloud-repeat"><option value="none">One time</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label>
+<label>Repeat through (optional)<input id="icloud-repeat-until" type="date" disabled></label>
+<p>Repeats start on the date above. Leave the last date empty to keep repeating. Monthly and yearly repeats skip dates that do not exist, such as February 30. Past events stay in iCloud; this dashboard shows upcoming events and its recent archive.</p>
+<label>Location<input id="icloud-location" maxlength="500"></label><label>Notes<textarea id="icloud-description" maxlength="4000"></textarea></label>
+<button type="submit">Save to iCloud</button><button type="button" id="icloud-new" class="secondary">New event / cancel edit</button>
+<p id="icloud-message" role="status"></p></form></details>
+<div id="calendar-events"></div><details class="panel"><summary>Past events (last 90 days)</summary><button id="load-archive" type="button" class="secondary">Refresh past events</button><p>Archived locally one hour after the end time. Original calendar entries are retained.</p><div id="calendar-archive"></div></details>
+<details class="calendar-help"><summary>Connect your calendars</summary>
+<p>Connections are set up privately on your Mac. Google calendars are read-only. Use the event editor for explicit iCloud changes.</p>
+<p><strong>Google:</strong> Create a Desktop OAuth client for the Google Calendar API, then sign in and choose which calendars to show.</p>
+<p><strong>iCloud:</strong> Use an Apple app-specific password, then choose which calendars to show. The event editor can create or update individual iCloud events when your account has permission.</p>
+<p>Keep passwords and downloaded credentials out of chat. Account setup is the next guided step.</p>
+</details>
+</section>
+<section id="departures-view" class="departure-layout" hidden aria-labelledby="departures-heading">
+<section class="panel departure-settings">
+<p class="eyebrow">GET THERE ON TIME</p><h2 id="departures-heading">Departure planner</h2>
+<p class="optional">Home is the default starting point for appointments. Set the extra time your family usually needs. Your address stays in this app on your Mac.</p>
+<form id="departure-form">
+<label>Home address<input id="home-address" required minlength="3" maxlength="500" list="home-address-suggestions" autocomplete="street-address" placeholder="Start typing your home address"><datalist id="home-address-suggestions"></datalist></label>
+<div class="buffer-fields">
+<label>Arrive early by<input id="arrival-buffer" type="number" min="0" max="180" value="10" required><span class="field-unit">minutes</span></label>
+<label>Parking and walking<input id="parking-buffer" type="number" min="0" max="180" value="10" required><span class="field-unit">minutes</span></label>
+</div>
+<button type="submit">Save departure settings</button>
+<p id="departure-save-message" class="form-message" role="status" aria-live="polite"></p>
+</form>
+<section class="commute-settings" aria-labelledby="commute-settings-heading">
+<p class="eyebrow">LIVE TRAFFIC TEXTS</p><h2 id="commute-settings-heading">Scheduled commute</h2>
+<p class="optional">Send a private, traffic-aware travel time to one parent. Work addresses are encrypted. School routes can follow your configured school calendar.</p>
+<form id="commute-form">
+<input id="commute-id" type="hidden">
+<label>Parent<select id="commute-member" required><option value="">Choose a parent</option></select></label>
+<label>Route type<select id="commute-kind" required><option value="work">Work</option><option value="school">School</option></select></label>
+<label>Route name<input id="commute-label" required minlength="1" maxlength="100" placeholder="Morning drive to work"></label>
+<label>Destination address<input id="commute-address" required minlength="3" maxlength="500" list="commute-address-suggestions" autocomplete="street-address" placeholder="Start typing a work or school address"><datalist id="commute-address-suggestions"></datalist></label>
+<p class="address-attribution optional"><span id="places-status"></span><img id="places-attribution" data-src="https://maps.gstatic.com/mapfiles/api-3/images/powered-by-google-on-white3.png" alt="Powered by Google" hidden></p>
+<label>Check traffic at<input id="commute-time" type="time" value="07:00" required></label>
+<fieldset class="weekday-picker"><legend>Send on</legend>
+<label><input type="checkbox" name="commute-weekday" value="0" checked>Mon</label><label><input type="checkbox" name="commute-weekday" value="1" checked>Tue</label><label><input type="checkbox" name="commute-weekday" value="2" checked>Wed</label><label><input type="checkbox" name="commute-weekday" value="3" checked>Thu</label><label><input type="checkbox" name="commute-weekday" value="4" checked>Fri</label><label><input type="checkbox" name="commute-weekday" value="5">Sat</label><label><input type="checkbox" name="commute-weekday" value="6">Sun</label>
+</fieldset>
+<label id="school-calendar-choice" class="contact-enabled" hidden><input id="commute-school-calendar" type="checkbox"><span>Only on configured school days</span></label>
+<label class="contact-enabled"><input id="commute-enabled" type="checkbox" checked><span>Enable this traffic text</span></label>
+<button id="save-commute" type="submit">Add commute schedule</button>
+<button id="cancel-commute-edit" class="secondary" type="button" hidden>Cancel edit</button>
+<p id="commute-save-message" class="form-message" role="status" aria-live="polite"></p>
+</form>
+</section>
+</section>
+<section class="board departure-events">
+<div class="board-top"><div><p class="eyebrow">UPCOMING TRIPS</p><h2>Calendar readiness</h2></div><button id="refresh-departures" class="secondary" type="button">Refresh</button></div>
+<p class="home-default"><strong>Default route:</strong> Home → Appointment. Turn on a return trip for any appointment to finish at Home.</p>
+<p id="departure-summary" role="status" aria-live="polite">Checking upcoming events…</p>
+<div id="departure-event-list"></div>
+<section class="commute-schedules" aria-labelledby="commute-schedules-heading">
+<div class="board-top"><div><p class="eyebrow">AUTOMATIC REPORTS</p><h2 id="commute-schedules-heading">Commute traffic texts</h2></div></div>
+<p id="school-calendar-status" class="optional"></p>
+<div id="commute-schedule-list"></div>
+</section>
+<div class="next-step">
+<strong>Free Google Maps directions</strong>
+<p>Open an outbound or return route to see Google Maps’ current traffic. No API key or billing account is needed.</p>
+</div>
+</section>
+</section>
+<section id="weather-view" class="weather-layout" hidden aria-labelledby="weather-heading">
+<section class="panel weather-settings">
+<p class="eyebrow">FAMILY FORECAST</p><h2 id="weather-heading">Weather preferences</h2>
+<p class="optional">Use a city or ZIP code. Your exact street address stays private on this Mac.</p>
+<form id="weather-form">
+<label>Forecast location<input id="weather-location" required minlength="2" maxlength="200" placeholder="City or postal code" autocomplete="postal-code"></label>
+<label>Suggest rain gear at<input id="weather-rain-threshold" type="number" min="0" max="100" value="50" required><span class="field-unit">percent chance of rain</span></label>
+<label>Suggest a jacket below<input id="weather-jacket-threshold" type="number" min="-50" max="100" value="55" required><span class="field-unit">°F feels-like temperature</span></label>
+<label>Suggest dressing light above<input id="weather-light-threshold" type="number" min="40" max="140" value="80" required><span class="field-unit">°F feels-like temperature</span></label>
+<button type="submit">Save and check weather</button>
+<p id="weather-save-message" class="form-message" role="status" aria-live="polite"></p>
+</form>
+</section>
+<section class="board weather-forecast">
+<div class="board-top"><div><p class="eyebrow">NEXT THREE DAYS</p><h2>What should we bring?</h2></div><button id="refresh-weather" class="secondary" type="button">Refresh weather</button></div>
+<p id="weather-summary" role="status" aria-live="polite">Save a city or ZIP code to see family weather guidance.</p>
+<div id="weather-days"></div>
+<p class="weather-attribution">Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a></p>
+</section>
+</section>
+<section id="concierge-view" class="concierge-layout" hidden aria-labelledby="concierge-heading">
+<section class="panel">
+<p class="eyebrow">CONCIERGE INBOX</p><h2 id="concierge-heading">What should we organize?</h2>
+<p class="optional">Paste a family text or email. For a child’s appointment, choose drop-off and pickup, pickup only from school, or no transportation. Pickup can be assigned to a parent, Uber, or left undecided.</p>
+<form id="concierge-form">
+<label>Family message<textarea id="concierge-text" required minlength="3" maxlength="2000" rows="7" placeholder="Schedule an appointment tomorrow at 3:30 PM for Alex and notify parents."></textarea></label>
+<button type="submit">Preview the plan</button>
+<p id="concierge-status" class="form-message" role="status" aria-live="polite"></p>
+</form>
+</section>
+<section class="board">
+<p class="eyebrow">REVIEW BEFORE ACTION</p><h2>Proposed plan</h2>
+<div id="concierge-preview"><p class="empty">Your reviewed plan will appear here.</p></div>
+<section class="concierge-inbox" aria-labelledby="concierge-inbox-heading">
+<div class="board-top"><div><p class="eyebrow">FROM IMESSAGE</p><h2 id="concierge-inbox-heading">Incoming FA requests</h2></div><button id="refresh-concierge-inbox" class="secondary" type="button">Refresh</button></div>
+<p class="optional">Only new messages from saved family contacts beginning with FA appear here. Plans wait for your review; nothing is sent or created automatically.</p>
+<p id="concierge-inbox-status" role="status" aria-live="polite"></p>
+<div id="concierge-inbox-list"></div>
+</section>
+</section>
+</section>
+<section id="alerts-view" class="alerts-layout" hidden aria-labelledby="alerts-heading">
+<section class="panel">
+<p class="eyebrow">FAMILY CONTACTS</p><h2 id="alerts-heading">Message alerts</h2>
+<p class="optional">For WhatsApp/SMS, enter a full +country-code phone number listed in your opted-in recipients. For iMessage, use the phone number or Apple Account email. Contact details are encrypted in the database and decrypted only inside this local app when needed.</p>
+<form id="alert-contacts-form"><div id="alert-contacts"></div><button type="submit" class="secondary">Save all contacts</button></form>
+</section>
+<section class="board">
+<div class="board-top"><div><p class="eyebrow">SCHEDULE</p><h2>Create an alert</h2></div><button id="refresh-alerts" class="secondary" type="button">Refresh</button></div>
+<section class="reminder-rule" aria-labelledby="morning-briefing-heading">
+<h3 id="morning-briefing-heading">Daily morning briefings</h3>
+<p class="optional">Each person receives their activities, tasks, weather advice, and an uplifting thought. Parents can receive the complete family schedule.</p>
+<form id="morning-briefing-form">
+<label class="contact-enabled"><input id="morning-briefing-enabled" type="checkbox"><span>Enable daily briefings</span></label>
+<label>Send every morning at<input id="morning-briefing-time" type="time" value="07:00" required></label>
+<div id="morning-briefing-recipients"></div>
+<button type="submit" class="secondary">Save morning briefings</button>
+<p id="morning-briefing-status" class="form-message" role="status" aria-live="polite"></p>
+</form>
+<div class="briefing-ledger" aria-labelledby="briefing-ledger-heading">
+<h4 id="briefing-ledger-heading">Delivery ledger</h4>
+<p class="optional">The last seven days show whether each briefing was sent, delayed, retried, or missed.</p>
+<div id="briefing-ledger-days"></div>
+</div>
+</section>
+<section class="reminder-rule" aria-labelledby="self-healing-heading">
+<h3 id="self-healing-heading">Weekly validation</h3>
+<p class="optional">Runs Sunday morning to check the local services, database, calendars, weather, privacy permissions, and iMessage worker.</p>
+<div id="self-healing-status"></div>
+</section>
+<section class="reminder-rule" aria-labelledby="weekend-schedule-heading">
+<h3 id="weekend-schedule-heading">Next weekend schedule</h3>
+<p class="optional">Refresh the family calendar and review a personalized schedule before sending it to every enabled family contact.</p>
+<button id="preview-weekend-schedule" class="secondary" type="button">Preview next weekend</button>
+<div id="weekend-schedule-preview" class="weekend-schedule-preview" hidden>
+<p id="weekend-schedule-summary"></p>
+<div id="weekend-schedule-messages"></div>
+<button id="send-weekend-schedule" type="button">Send to family now</button>
+</div>
+<p id="weekend-schedule-status" class="form-message" role="status" aria-live="polite"></p>
+</section>
+<section class="reminder-rule" aria-labelledby="reminder-rule-heading">
+<h3 id="reminder-rule-heading">Automatic calendar reminders</h3>
+<form id="calendar-alert-rule-form">
+<label class="contact-enabled"><input id="calendar-alert-enabled" type="checkbox" checked><span>Enable automatic reminders</span></label>
+<label>Send calendar reminders to<select id="calendar-alert-member" required><option value="">Choose a family member</option></select></label>
+<div class="buffer-fields">
+<label>Leave reminder<input id="leave-reminder-minutes" type="number" min="0" max="10080" value="60" required><span class="field-unit">minutes before</span></label>
+<label>Appointment reminder<input id="appointment-reminder-minutes" type="number" min="0" max="10080" value="30" required><span class="field-unit">minutes before</span></label>
+</div>
+<button type="submit" class="secondary">Save automatic reminders</button>
+<p id="calendar-alert-rule-status" class="form-message" role="status" aria-live="polite"></p>
+</form>
+</section>
+<form id="alert-form" class="alert-form">
+<label>Send to<select id="alert-member" required><option value="">Choose a family member</option></select></label>
+<label>Message<textarea id="alert-message" required maxlength="500" rows="3" placeholder="Time to leave for your appointment."></textarea></label>
+<label>Send at<input id="alert-time" type="datetime-local" required></label>
+<button type="submit">Schedule alert</button>
+<p id="alert-message-status" class="form-message" role="status" aria-live="polite"></p>
+</form>
+<div class="alert-delivery-note">
+<strong>Messages are delivered through this Mac.</strong>
+<p>After the first test succeeds, install the local background service to check due alerts every minute. Messages must remain signed in.</p>
+</div>
+<h2 class="recent-alerts-heading">Recent alerts</h2>
+<div id="alert-list"></div>
+</section>
+</section>
+</main>
+</body></html>

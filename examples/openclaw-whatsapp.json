@@ -1,0 +1,16 @@
+{
+  "channels": {
+    "whatsapp": {
+      "accounts": {
+        "family": {
+          "dmPolicy": "allowlist",
+          "allowFrom": [
+            "+15555550101"
+          ],
+          "groupPolicy": "disabled",
+          "selfChatMode": false
+        }
+      }
+    }
+  }
+}

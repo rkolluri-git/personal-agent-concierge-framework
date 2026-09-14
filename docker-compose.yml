@@ -1,0 +1,82 @@
+services:
+  family-agent-api:
+    build: .
+    container_name: family-agent-api
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      family-agent-db:
+        condition: service_healthy
+    volumes:
+      - ./config:/app/config
+    environment:
+      FAMILY_MESSAGING_PROVIDER: ${FAMILY_MESSAGING_PROVIDER:-imessage}
+      FAMILY_TIMEZONE: ${FAMILY_TIMEZONE:-America/New_York}
+      FAMILY_LOCALE: ${FAMILY_LOCALE:-en-US}
+      FAMILY_COUNTRY: ${FAMILY_COUNTRY:-US}
+      FAMILY_UNITS: ${FAMILY_UNITS:-imperial}
+      FAMILY_SCHOOL_CALENDAR: ${FAMILY_SCHOOL_CALENDAR:-none}
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      FAMILY_LLM_PROVIDER: ${FAMILY_LLM_PROVIDER:-none}
+      FAMILY_LLM_MODEL: ${FAMILY_LLM_MODEL:-qwen3.5:9b}
+      DATABASE_URL: postgresql://familyagent:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@family-agent-db:5432/familyagent
+
+  family-agent-db:
+    image: postgres:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    container_name: family-agent-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: familyagent
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: familyagent
+    volumes:
+      - family-agent-postgres-data:/var/lib/postgresql/data
+
+
+  messaging-worker:
+    profiles: [messaging]
+    build: .
+    command: ["python", "messaging_worker.py"]
+    restart: unless-stopped
+    depends_on:
+      family-agent-api:
+        condition: service_healthy
+    volumes:
+      - ./config:/app/config:ro
+    environment:
+      FAMILY_MESSAGING_PROVIDER: ${FAMILY_MESSAGING_PROVIDER:-imessage}
+      FAMILY_API_URL: http://family-agent-api:8000
+
+  messaging-gateway:
+    profiles: [messaging, messaging-ingress]
+    build: .
+    command: ["uvicorn", "messaging_gateway:app", "--host", "0.0.0.0", "--port", "8001", "--no-access-log"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8001:8001"
+    depends_on:
+      family-agent-api:
+        condition: service_healthy
+    volumes:
+      - ./config:/app/config:ro
+    environment:
+      FAMILY_MESSAGING_PROVIDER: ${FAMILY_MESSAGING_PROVIDER:-imessage}
+      FAMILY_API_URL: http://family-agent-api:8000
+
+
+volumes:
+  family-agent-postgres-data:

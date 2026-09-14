@@ -1,0 +1,31 @@
+name: Tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r backend/requirements.txt pytest httpx
+      - run: python -m pytest -q
+        env:
+          PYTHONPATH: backend:macos
+      - run: node --check backend/static/dashboard.js
+      - run: node --check backend/static/login.js
+      - run: node --check backend/static/concierge-workspace.js
+      - run: node tests/test_openclaw_hook.mjs
+  windows-syntax:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - shell: pwsh
+        run: |
+          Get-ChildItem windows/*.ps1 | ForEach-Object {
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count) { throw "PowerShell syntax check failed" }
+          }
